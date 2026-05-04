@@ -36,76 +36,7 @@ import { DepartmentWithImage } from '../../models/store.models';
       </section>
     </div>
   `,
-  styles: [`
-    .home-page {
-      animation: fadeIn 0.3s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .hero {
-      text-align: center;
-      padding: 3rem 1rem;
-      margin-bottom: 2rem;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-      border-radius: var(--radius);
-      color: white;
-    }
-
-    .hero h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-    }
-
-    .hero p {
-      font-size: 1.125rem;
-      opacity: 0.9;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .departments-section h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 1.5rem;
-    }
-
-    .departments-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-
-    @media (max-width: 640px) {
-      .hero {
-        padding: 2rem 1rem;
-      }
-
-      .hero h1 {
-        font-size: 1.5rem;
-      }
-
-      .hero p {
-        font-size: 1rem;
-      }
-
-      .departments-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-    }
-  `]
+  styleUrls: ['home.component.css'],
 })
 export class HomeComponent implements OnInit {
   departments = signal<DepartmentWithImage[]>([]);
