@@ -1,0 +1,6 @@
+# https://www.robotstxt.org/
+User-agent: *
+Allow: /
+
+# Si despliegas en un dominio fijo, configura environment.siteUrl y sustituye la URL del sitemap.
+# Sitemap: https://ejemplo.com/sitemap.xml

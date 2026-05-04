@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed, inject, PLATFORM_ID } from '@angul
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CurrencyPipe, isPlatformBrowser } from '@angular/common';
 import { SupabaseService } from '../../services/supabase.service';
+import { SeoService } from '../../services/seo.service';
 import { CartService } from '../../services/cart.service';
 import { ProductDetail } from '../../models/store.models';
 import { LoadingSpinnerComponent } from '../../components/loading-spinner/loading-spinner.component';
@@ -178,7 +179,8 @@ export class ProductComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private supabaseService: SupabaseService,
-    private cartService: CartService
+    private cartService: CartService,
+    private seo: SeoService
   ) {}
 
   ngOnInit(): void {
@@ -196,10 +198,40 @@ export class ProductComponent implements OnInit {
     
     const productDetail = await this.supabaseService.getProductDetail(productId);
     this.product.set(productDetail);
-    var images = [productDetail?.imageUrl ?? ''];
+    const images = [productDetail?.imageUrl ?? ''];
     images.push(...(productDetail?.images ?? []));
     this.images.set(images);
     this.loading.set(false);
+
+    if (!productDetail) {
+      this.seo.setPage({
+        title: 'Producto no encontrado',
+        description:
+          'El producto solicitado no está disponible o ha sido retirado del catálogo de C&D Márquez Corp.',
+        urlPath: `/producto/${productId}`,
+        noIndex: true,
+        jsonLd: null,
+      });
+      return;
+    }
+
+    const p = productDetail;
+    const imgsForLd = [p.imageUrl, ...(p.images ?? [])].filter(Boolean) as string[];
+    const absImages = this.seo.productImageUrlsForJsonLd(imgsForLd);
+    const price = p.precioUSD ?? p.precio;
+    let description = `${p.descripcion}. Disponible en ${this.seo.brand}.`;
+    if (price != null) {
+      description = `${p.descripcion}. Precio referencia USD ${price}. ${this.seo.brand}, compra online.`;
+    }
+
+    this.seo.setPage({
+      title: p.descripcion,
+      description: description.slice(0, 320),
+      urlPath: `/producto/${p.id_producto}`,
+      imageUrl: p.imageUrl,
+      pageType: 'product',
+      jsonLd: this.seo.buildProductJsonLd(p, absImages),
+    });
   }
 
   nextImage(): void {

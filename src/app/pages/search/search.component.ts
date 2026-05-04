@@ -4,6 +4,7 @@ import { ProductCardComponent } from '../../components/product-card/product-card
 import { LoadingSpinnerComponent } from '../../components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { SupabaseService } from '../../services/supabase.service';
+import { SeoService } from '../../services/seo.service';
 import { ProductWithImage } from '../../models/store.models';
 
 @Component({
@@ -134,7 +135,8 @@ export class SearchComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private seo: SeoService
   ) {}
 
   ngOnInit(): void {
@@ -152,9 +154,24 @@ export class SearchComponent implements OnInit {
         } finally {
           this.loading.set(false);
         }
+        const count = this.products().length;
+        this.seo.setPage({
+          title: `Búsqueda: ${q}`,
+          description:
+            count === 0
+              ? `No hay resultados para «${q}» en ${this.seo.brand}. Prueba otros términos o explora por departamento.`
+              : `${count} producto(s) para «${q}» en ${this.seo.brand}. Compra online y consulta por WhatsApp.`,
+          jsonLd: null,
+        });
       } else {
         this.products.set([]);
         this.loading.set(false);
+        this.seo.setPage({
+          title: 'Búsqueda de productos',
+          description: `Busca en el catálogo de ${this.seo.brand} por nombre o código.`,
+          urlPath: '/buscar',
+          jsonLd: null,
+        });
       }
     });
   }
