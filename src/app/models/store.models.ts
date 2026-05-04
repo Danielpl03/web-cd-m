@@ -72,6 +72,17 @@ export interface ProductDetail extends ProductWithImage {
   category?: Category;
 }
 
+/** Línea persistida en el carrito (localStorage). */
+export interface CartLineItem {
+  id_producto: number;
+  descripcion: string;
+  codigo: string | null;
+  imageUrl: string;
+  /** Precio unitario en USD (misma lógica que precioUSD / precio en ficha). */
+  unitPrice: number;
+  quantity: number;
+}
+
 export interface DepartmentWithImage extends Department {
   imageUrl: string;
 }

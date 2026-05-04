@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { CategoryChipComponent } from '../../components/category-chip/category-chip.component';
@@ -6,6 +6,11 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { SupabaseService } from '../../services/supabase.service';
 import { DepartmentWithImage, Category, ProductWithImage } from '../../models/store.models';
+
+type DepartmentCategoryFilter =
+  | { mode: 'all' }
+  | { mode: 'uncategorized' }
+  | { mode: 'category'; category: Category };
 
 @Component({
   selector: 'app-department',
@@ -31,22 +36,30 @@ import { DepartmentWithImage, Category, ProductWithImage } from '../../models/st
       } @else {
         <header class="page-header">
           <h1>{{ department()?.departamento }}</h1>
-          <p>{{ products().length }} productos encontrados</p>
+          <p>{{ filteredProducts().length }} productos encontrados</p>
         </header>
 
-        @if (categories().length > 0) {
+        @if (showCategoryFilters()) {
           <div class="categories-scroll">
             <button 
               class="category-chip all" 
-              [class.active]="!selectedCategory()"
+              [class.active]="categoryFilter().mode === 'all'"
               (click)="clearCategory()"
             >
               Todos
             </button>
+            <button
+              type="button"
+              class="category-chip uncategorized"
+              [class.active]="categoryFilter().mode === 'uncategorized'"
+              (click)="selectUncategorized()"
+            >
+              Sin categoría
+            </button>
             @for (category of categories(); track category.id_categoria) {
               <app-category-chip 
                 [category]="category"
-                [isActive]="selectedCategory()?.id_categoria === category.id_categoria"
+                [isActive]="isCategorySelected(category)"
                 (selected)="selectCategory($event)"
               />
             }
@@ -155,6 +168,29 @@ import { DepartmentWithImage, Category, ProductWithImage } from '../../models/st
       color: white;
     }
 
+    .category-chip.uncategorized {
+      padding: 0.5rem 1rem;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .category-chip.uncategorized:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .category-chip.uncategorized.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
     .products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -188,8 +224,29 @@ export class DepartmentComponent implements OnInit {
   department = signal<DepartmentWithImage | null>(null);
   categories = signal<Category[]>([]);
   products = signal<ProductWithImage[]>([]);
-  selectedCategory = signal<Category | null>(null);
+  categoryFilter = signal<DepartmentCategoryFilter>({ mode: 'all' });
   loading = signal(true);
+
+  readonly showCategoryFilters = computed(
+    () =>
+      this.categories().length > 0 ||
+      this.products().some((p) => p.id_categoria == null)
+  );
+
+  readonly filteredProducts = computed(() => {
+    const list = this.products();
+    const f = this.categoryFilter();
+    if (f.mode === 'all') {
+      const webCategoryIds = new Set(this.categories().map((c) => c.id_categoria));
+      return list.filter(
+        (p) => p.id_categoria == null || webCategoryIds.has(p.id_categoria)
+      );
+    }
+    if (f.mode === 'uncategorized') {
+      return list.filter((p) => p.id_categoria == null);
+    }
+    return list.filter((p) => p.id_categoria === f.category.id_categoria);
+  });
 
   constructor(
     private route: ActivatedRoute,
@@ -216,23 +273,30 @@ export class DepartmentComponent implements OnInit {
     }
   }
 
-  filteredProducts(): ProductWithImage[] {
-    const category = this.selectedCategory();
-    if (!category) {
-      return this.products();
-    }
-    return this.products().filter(p => p.id_categoria === category.id_categoria);
+  isCategorySelected(category: Category): boolean {
+    const f = this.categoryFilter();
+    return f.mode === 'category' && f.category.id_categoria === category.id_categoria;
   }
 
   selectCategory(category: Category): void {
-    if (this.selectedCategory()?.id_categoria === category.id_categoria) {
-      this.selectedCategory.set(null);
+    const f = this.categoryFilter();
+    if (f.mode === 'category' && f.category.id_categoria === category.id_categoria) {
+      this.categoryFilter.set({ mode: 'all' });
     } else {
-      this.selectedCategory.set(category);
+      this.categoryFilter.set({ mode: 'category', category });
+    }
+  }
+
+  selectUncategorized(): void {
+    const f = this.categoryFilter();
+    if (f.mode === 'uncategorized') {
+      this.categoryFilter.set({ mode: 'all' });
+    } else {
+      this.categoryFilter.set({ mode: 'uncategorized' });
     }
   }
 
   clearCategory(): void {
-    this.selectedCategory.set(null);
+    this.categoryFilter.set({ mode: 'all' });
   }
 }

@@ -1,9 +1,11 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, isPlatformBrowser } from '@angular/common';
 import { SupabaseService } from '../../services/supabase.service';
-import { ProductDetail, ProductoImage } from '../../models/store.models';
+import { CartService } from '../../services/cart.service';
+import { ProductDetail } from '../../models/store.models';
 import { LoadingSpinnerComponent } from '../../components/loading-spinner/loading-spinner.component';
+import { environment } from '../../environment';
 
 @Component({
   selector: 'app-product',
@@ -102,6 +104,21 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
               }
             </div>
 
+            <div class="cart-actions">
+              <button
+                type="button"
+                class="btn-add-cart"
+                (click)="addToCart()"
+                [class.added]="justAdded()">
+                @if (justAdded()) {
+                  Añadido al carrito
+                } @else {
+                  Añadir al carrito
+                }
+              </button>
+              <a routerLink="/carrito" class="link-cart">Ver carrito</a>
+            </div>
+
             <!-- Ficha Técnica -->
             @if (product()!.etiquetas.length > 0) {
               <div class="specs-section">
@@ -116,6 +133,20 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
                 </dl>
               </div>
             }
+
+            <div class="whatsapp-inquiry">
+              <p class="whatsapp-inquiry-label">¿Necesitas más datos sobre este artículo?</p>
+              <button
+                type="button"
+                class="btn-whatsapp-inquiry"
+                (click)="askWhatsAppAboutProduct()"
+                aria-label="Pedir más información por WhatsApp sobre este producto">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.883 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                Pedir más información por WhatsApp
+              </button>
+            </div>
           </div>
         </div>
       } @else {
@@ -311,7 +342,47 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
     }
 
     .price-section {
+      margin-bottom: 1.25rem;
+    }
+
+    .cart-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
       margin-bottom: 2rem;
+    }
+
+    .btn-add-cart {
+      padding: 0.875rem 1.75rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 1rem;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-add-cart:hover {
+      background: var(--primary-light);
+    }
+
+    .btn-add-cart.added {
+      background: var(--accent);
+      color: var(--text-primary);
+    }
+
+    .link-cart {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .link-cart:hover {
+      opacity: 0.85;
     }
 
     .price {
@@ -367,6 +438,40 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
       word-break: break-word;
     }
 
+    .whatsapp-inquiry {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .whatsapp-inquiry-label {
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+    }
+
+    .btn-whatsapp-inquiry {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 100%;
+      padding: 0.875rem 1.25rem;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.9375rem;
+      background: #25d366;
+      color: #fff;
+      transition: background 0.2s, filter 0.2s;
+    }
+
+    .btn-whatsapp-inquiry:hover {
+      background: #1ebe57;
+      filter: brightness(1.02);
+    }
+
     .not-found {
       text-align: center;
       padding: 4rem 1rem;
@@ -420,9 +525,13 @@ export class ProductComponent implements OnInit {
     return this.images()[this.currentIndex()];
   });
 
+  justAdded = signal(false);
+  private readonly platformId = inject(PLATFORM_ID);
+
   constructor(
     private route: ActivatedRoute,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private cartService: CartService
   ) {}
 
   ngOnInit(): void {
@@ -466,5 +575,40 @@ export class ProductComponent implements OnInit {
   onImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
     img.src = 'images/placeholder.jpg';
+  }
+
+  addToCart(): void {
+    const p = this.product();
+    if (!p) return;
+    this.cartService.addProduct(p);
+    this.justAdded.set(true);
+    setTimeout(() => this.justAdded.set(false), 2200);
+  }
+
+  askWhatsAppAboutProduct(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const p = this.product();
+    if (!p) return;
+    const productUrl = `${window.location.origin}/producto/${p.id_producto}`;
+    const lines: string[] = [
+      'Hola, me gustaría recibir más información sobre este producto:',
+      '',
+      `*${p.descripcion}*`,
+    ];
+    if (p.codigo) {
+      lines.push(`Código: ${p.codigo}`);
+    }
+    // lines.push(`ID: ${p.id_producto}`);
+    lines.push(`Enlace: ${productUrl}`);
+    lines.push('');
+    lines.push('Gracias.');
+    const message = lines.join('\n');
+    const encoded = encodeURIComponent(message);
+    const phoneDigits = (environment.whatsappOrderPhone ?? '').replace(/\D/g, '');
+    const url =
+      phoneDigits.length > 0
+        ? `https://wa.me/${phoneDigits}?text=${encoded}`
+        : `https://api.whatsapp.com/send?text=${encoded}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 }

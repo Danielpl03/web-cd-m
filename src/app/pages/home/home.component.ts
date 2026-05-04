@@ -13,7 +13,7 @@ import { DepartmentWithImage } from '../../models/store.models';
     <div class="home-page">
       <section class="hero">
         <h1>Bienvenido a C&D Márquez Corp</h1>
-        <p>Descubre nuestra amplia variedad de productos organizados por departamentos</p>
+        <p>Descubre nuestra amplia variedad de productos</p>
       </section>
 
       <section class="departments-section">
