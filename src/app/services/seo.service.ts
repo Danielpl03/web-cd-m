@@ -144,11 +144,8 @@ export class SeoService {
   }
 
   private resolveOrigin(): string {
-    let configured = environment.siteUrl?.replace(/\/$/, '').trim();
+    const configured = environment.siteUrl?.replace(/\/$/, '').trim();
     if (configured) {
-      if (!/^https?:\/\//i.test(configured)) {
-        configured = `https://${configured}`;
-      }
       return configured;
     }
     return typeof this.document.defaultView?.location?.origin === 'string'
