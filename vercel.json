@@ -1,4 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/web-cd-m/browser",
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/api/ssr" }],
+  "functions": {
+    "api/ssr.mjs": {
+      "includeFiles": "dist/web-cd-m/**",
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
 }
