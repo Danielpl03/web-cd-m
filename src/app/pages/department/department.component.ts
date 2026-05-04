@@ -5,6 +5,7 @@ import { CategoryChipComponent } from '../../components/category-chip/category-c
 import { LoadingSpinnerComponent } from '../../components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { SupabaseService } from '../../services/supabase.service';
+import { SeoService } from '../../services/seo.service';
 import { DepartmentWithImage, Category, ProductWithImage } from '../../models/store.models';
 
 type DepartmentCategoryFilter =
@@ -250,7 +251,8 @@ export class DepartmentComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private seo: SeoService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -270,6 +272,25 @@ export class DepartmentComponent implements OnInit {
       console.error('Error loading department:', error);
     } finally {
       this.loading.set(false);
+    }
+
+    const dept = this.department();
+    if (!dept) {
+      this.seo.setPage({
+        title: 'Departamento no encontrado',
+        description:
+          'El departamento solicitado no existe o no está disponible en la tienda en línea C&D Márquez Corp.',
+        urlPath: `/departamento/${id}`,
+        noIndex: true,
+        jsonLd: null,
+      });
+    } else {
+      this.seo.setPage({
+        title: dept.departamento,
+        description: `Productos del departamento ${dept.departamento} en ${this.seo.brand}. Filtra por categoría, añade al carrito y consulta por WhatsApp.`,
+        urlPath: `/departamento/${id}`,
+        jsonLd: null,
+      });
     }
   }
 

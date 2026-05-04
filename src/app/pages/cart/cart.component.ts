@@ -1,9 +1,10 @@
-import { Component, inject, PLATFORM_ID } from '@angular/core';
+import { Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { environment } from '../../environment';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-cart',
@@ -126,9 +127,21 @@ import { environment } from '../../environment';
   `,
   styleUrls: ['cart.component.css'],
 })
-export class CartComponent {
+export class CartComponent implements OnInit {
   protected readonly cart = inject(CartService);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly seo = inject(SeoService);
+
+  ngOnInit(): void {
+    this.seo.setPage({
+      title: 'Carrito de compras',
+      description:
+        'Revisa los productos en tu carrito y finaliza el pedido por WhatsApp en C&D Márquez Corp.',
+      urlPath: '/carrito',
+      noIndex: true,
+      jsonLd: null,
+    });
+  }
 
   lineTotal(line: { unitPrice: number; quantity: number }): number {
     return line.unitPrice * line.quantity;

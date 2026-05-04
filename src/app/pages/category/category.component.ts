@@ -4,6 +4,7 @@ import { ProductCardComponent } from '../../components/product-card/product-card
 import { LoadingSpinnerComponent } from '../../components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { SupabaseService } from '../../services/supabase.service';
+import { SeoService } from '../../services/seo.service';
 import { Category, ProductWithImage, DepartmentWithImage } from '../../models/store.models';
 
 @Component({
@@ -147,7 +148,8 @@ export class CategoryComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private seo: SeoService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -170,6 +172,28 @@ export class CategoryComponent implements OnInit {
       console.error('Error loading category:', error);
     } finally {
       this.loading.set(false);
+    }
+
+    const cat = this.category();
+    if (!cat) {
+      this.seo.setPage({
+        title: 'Categoría no encontrada',
+        description:
+          'La categoría solicitada no existe o no está disponible en C&D Márquez Corp.',
+        urlPath: `/categoria/${id}`,
+        noIndex: true,
+        jsonLd: null,
+      });
+    } else {
+      const deptName = this.department()?.departamento;
+      this.seo.setPage({
+        title: cat.nombre,
+        description: deptName
+          ? `Productos de la categoría ${cat.nombre} en ${deptName}. Compra en ${this.seo.brand}.`
+          : `Productos de la categoría ${cat.nombre} en ${this.seo.brand}.`,
+        urlPath: `/categoria/${id}`,
+        jsonLd: null,
+      });
     }
   }
 }

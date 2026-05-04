@@ -3,6 +3,7 @@ import { DepartmentCardComponent } from '../../components/department-card/depart
 import { LoadingSpinnerComponent } from '../../components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { SupabaseService } from '../../services/supabase.service';
+import { SeoService } from '../../services/seo.service';
 import { DepartmentWithImage } from '../../models/store.models';
 
 @Component({
@@ -42,9 +43,13 @@ export class HomeComponent implements OnInit {
   departments = signal<DepartmentWithImage[]>([]);
   loading = signal(true);
 
-  constructor(private supabaseService: SupabaseService) {}
+  constructor(
+    private supabaseService: SupabaseService,
+    private seo: SeoService
+  ) {}
 
   async ngOnInit(): Promise<void> {
+    this.seo.setHomePage();
     try {
       const data = await this.supabaseService.getDepartments();
       this.departments.set(data);
